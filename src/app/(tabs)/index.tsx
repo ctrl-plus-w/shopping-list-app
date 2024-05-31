@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -7,11 +7,14 @@ import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import CreateUpdateIngredientModal from '@/modal/create-update-ingredient-modal';
 
+import { useCart } from '@/context/cart-context';
+
 const HomeScreen = () => {
+  const { cart, ingredients } = useCart();
+
   const createUpdateBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   return (
-    // eslint-disable-next-line react/react-in-jsx-scope
     <CreateUpdateIngredientModal ref={createUpdateBottomSheetModalRef}>
       <SafeAreaView style={styles.safeArea}>
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -21,6 +24,12 @@ const HomeScreen = () => {
             <Ionicons name="add" size={32} />
           </TouchableOpacity>
         </View>
+
+        <View>
+          {ingredients.map(({ id, name }) => (
+            <Text key={id}>{name}</Text>
+          ))}
+        </View>
       </SafeAreaView>
     </CreateUpdateIngredientModal>
   );
@@ -28,9 +37,10 @@ const HomeScreen = () => {
 
 const styles = StyleSheet.create({
   safeArea: {
-    margin: 32,
     display: 'flex',
-    flexDirection: 'row',
+    flexDirection: 'column',
+    gap: 8,
+    margin: 32,
   },
   container: {
     flex: 1,

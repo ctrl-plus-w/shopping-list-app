@@ -8,6 +8,8 @@ import CreateUpdateIngredientForm from '@/module/create-update-ingredient-form';
 
 import ModalBackdrop from '@/element/modal-backdrop';
 
+import { useCart } from '@/context/cart-context';
+
 interface IProps {
   children?: ReactNode;
 }
@@ -16,12 +18,18 @@ const CreateUpdateIngredientModal = (
   { children }: IProps,
   createUpdateBottomSheetModalRef: ForwardedRef<BottomSheetModal>,
 ) => {
+  const { refreshCart } = useCart();
   const snapPoints = useMemo(() => ['90%', '90%'], []);
 
   const closeModal = useCallback(() => {
     if (createUpdateBottomSheetModalRef && 'current' in createUpdateBottomSheetModalRef)
       createUpdateBottomSheetModalRef?.current?.close();
   }, []);
+
+  const afterCreateUpdateIngredient = () => {
+    refreshCart().then();
+    closeModal();
+  };
 
   return (
     <GestureHandlerRootView>
@@ -36,7 +44,7 @@ const CreateUpdateIngredientModal = (
             snapPoints={snapPoints}
           >
             <BottomSheetView style={styles.contentContainer}>
-              <CreateUpdateIngredientForm callback={closeModal} />
+              <CreateUpdateIngredientForm callback={afterCreateUpdateIngredient} />
             </BottomSheetView>
           </BottomSheetModal>
         </View>

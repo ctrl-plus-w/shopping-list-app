@@ -53,6 +53,8 @@ const CreateUpdateIngredientForm = ({ callback }: IProps) => {
   const onSubmit = async () => {
     if (!cart) return;
 
+    if (selectedUnitId === '' || name === '') return;
+
     try {
       const { data: createdIngredient, error: createIngredientError } = await supabase
         .from('ingredients')
@@ -66,7 +68,7 @@ const CreateUpdateIngredientForm = ({ callback }: IProps) => {
       const { error } = await supabase
         .from('cart__ingredients')
         .insert({
-          unit_id: selectedUnitId,
+          unit_id: selectedSubUnitId === '' ? selectedUnitId : selectedSubUnitId,
           quantity: quantity,
           ingredient_id: createdIngredient.id,
           cart_id: cart.id,
