@@ -34,19 +34,19 @@ export type Database = {
           cart_id: string;
           ingredient_id: string;
           quantity: number | null;
-          unit_id: string | null;
+          unit_id: string;
         };
         Insert: {
           cart_id: string;
           ingredient_id: string;
           quantity?: number | null;
-          unit_id?: string | null;
+          unit_id: string;
         };
         Update: {
           cart_id?: string;
           ingredient_id?: string;
           quantity?: number | null;
-          unit_id?: string | null;
+          unit_id?: string;
         };
         Relationships: [
           {
