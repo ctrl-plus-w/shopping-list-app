@@ -26,6 +26,14 @@ const TabLayout = () => {
         />
 
         <Tabs.Screen
+          name="recipes"
+          options={{
+            title: 'Recettes',
+            tabBarIcon: ({ color, focused }) => <TabBarIcon name={focused ? 'book' : 'book-outline'} color={color} />,
+          }}
+        />
+
+        <Tabs.Screen
           name="settings"
           options={{
             title: 'Paramètres',

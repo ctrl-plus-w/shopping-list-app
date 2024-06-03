@@ -1,5 +1,3 @@
-import CartIngredient from '@/element/cart-ingredient';
-
 import { TCartIngredient } from '@/type/database';
 
 export const isDefined = <T>(el: T | undefined | null): el is T => {

@@ -10,16 +10,19 @@ import { useUnits } from '@/context/units-context';
 
 import useSuggestedCategories from '@/hook/use-suggested-categories';
 
-import supabase from '@/instance/supabase';
+import { CreateIngredientHandler, UpdateIngredientHandler } from '@/util/ingredients';
 
 import { TCartIngredient } from '@/type/database';
 
-interface IProps {
+export interface IProps {
   ingredient?: TCartIngredient;
   callback?: () => void | Promise<void>;
+
+  createHandler: CreateIngredientHandler;
+  updateHandler: UpdateIngredientHandler;
 }
 
-const CreateUpdateIngredientForm = ({ ingredient, callback }: IProps) => {
+const CreateUpdateIngredientForm = ({ ingredient, createHandler, updateHandler, callback }: IProps) => {
   const { units } = useUnits();
   const { cart } = useCart();
   const { session } = useAuth();
@@ -57,63 +60,15 @@ const CreateUpdateIngredientForm = ({ ingredient, callback }: IProps) => {
     }
   }, [ingredient]);
 
-  const createIngredient = async () => {
-    if (!cart || !session) return;
-
-    const { data: createdIngredient, error: createIngredientError } = await supabase
-      .from('ingredients')
-      .insert({ name, category, user_id: session.user.id })
-      .select('id')
-      .single();
-
-    if (createIngredientError) throw createIngredientError;
-    if (!createdIngredient) throw new Error('Ingredient failed to be created.');
-
-    const { error } = await supabase
-      .from('cart__ingredients')
-      .insert({
-        unit_id: selectedSubUnitId === '' ? selectedUnitId : selectedSubUnitId,
-        quantity: quantity,
-        ingredient_id: createdIngredient.id,
-        cart_id: cart.id,
-      })
-      .select('*');
-
-    if (error) throw error;
-  };
-
-  const updateIngredient = async () => {
-    if (!cart || !session || !ingredient) return;
-
-    const { data: updatedIngredient, error: updateIngredientError } = await supabase
-      .from('ingredients')
-      .update({ name, category })
-      .eq('id', ingredient.id)
-      .select('id')
-      .single();
-
-    if (updateIngredientError) throw updateIngredientError;
-    if (!updatedIngredient) throw new Error('Ingredient failed to be updated.');
-
-    const { error } = await supabase
-      .from('cart__ingredients')
-      .update({
-        unit_id: selectedSubUnitId === '' ? selectedUnitId : selectedSubUnitId,
-        quantity: quantity,
-      })
-      .eq('ingredient_id', updatedIngredient.id)
-      .eq('cart_id', cart.id)
-      .select('*');
-
-    if (error) throw error;
-  };
-
   const onSubmit = async () => {
-    if (selectedUnitId === '' || name === '') return;
+    if (selectedUnitId === '' || name === '' || !cart || !session) return;
 
     try {
-      if (!ingredient) await createIngredient();
-      else await updateIngredient();
+      const unitId = selectedSubUnitId === '' ? selectedUnitId : selectedSubUnitId;
+      const data = { name, quantity, category, unitId };
+
+      if (!ingredient) await createHandler(cart, session, data);
+      else await updateHandler(cart, ingredient.id, data);
 
       callback && callback();
     } catch (err) {

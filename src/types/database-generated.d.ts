@@ -226,9 +226,9 @@ export type Database = {
           image: string | null;
           preparation_ime: number | null;
           servings: number;
-          steps: string[];
+          steps: string[] | null;
           title: string;
-          url: string;
+          url: string | null;
           user_id: string;
           waiting_time: number | null;
         };
@@ -239,9 +239,9 @@ export type Database = {
           image?: string | null;
           preparation_ime?: number | null;
           servings: number;
-          steps: string[];
+          steps?: string[] | null;
           title: string;
-          url: string;
+          url?: string | null;
           user_id: string;
           waiting_time?: number | null;
         };
@@ -252,9 +252,9 @@ export type Database = {
           image?: string | null;
           preparation_ime?: number | null;
           servings?: number;
-          steps?: string[];
+          steps?: string[] | null;
           title?: string;
-          url?: string;
+          url?: string | null;
           user_id?: string;
           waiting_time?: number | null;
         };
