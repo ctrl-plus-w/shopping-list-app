@@ -2,7 +2,7 @@ import { createContext, ReactNode, useContext, useEffect, useState } from 'react
 
 import supabase from '@/instance/supabase';
 
-import { Tables } from '@/type/database';
+import { Tables } from '@/type/database-generated';
 
 interface IContext {
   units: Tables<'units'>[];

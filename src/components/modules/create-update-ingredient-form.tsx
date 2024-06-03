@@ -12,11 +12,14 @@ import useSuggestedCategories from '@/hook/use-suggested-categories';
 
 import supabase from '@/instance/supabase';
 
+import { CartIngredient } from '@/type/database';
+
 interface IProps {
+  ingredient?: CartIngredient;
   callback?: () => void | Promise<void>;
 }
 
-const CreateUpdateIngredientForm = ({ callback }: IProps) => {
+const CreateUpdateIngredientForm = ({ ingredient, callback }: IProps) => {
   const { units } = useUnits();
   const { cart } = useCart();
   const { session } = useAuth();
@@ -32,6 +35,22 @@ const CreateUpdateIngredientForm = ({ callback }: IProps) => {
   const [selectedSubUnitId, setSelectedSubUnitId] = useState('');
 
   const parentUnits = useMemo(() => units.filter((unit) => !unit.parent_category_id), [units]);
+
+  useEffect(() => {
+    if (!ingredient) return;
+
+    setName(ingredient.name);
+    setQuantity(ingredient.quantity ?? 1);
+
+    if (ingredient.unit) {
+      if (ingredient.unit.parent_category_id) {
+        setSelectedUnitId(ingredient.unit.parent_category_id);
+        setSelectedSubUnitId(ingredient.unit.id);
+      } else {
+        setSelectedUnitId(ingredient.unit.id);
+      }
+    }
+  }, [ingredient]);
 
   const onSubmit = async () => {
     if (!cart || !session) return;

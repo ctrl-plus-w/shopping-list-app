@@ -7,9 +7,8 @@ import supabase from '@/instance/supabase';
 
 import { isDefined } from '@/util/array';
 
-import { Tables } from '@/type/database';
-
-type CartIngredient = Tables<'ingredients'> & { quantity?: number; unit?: Tables<'units'> };
+import { CartIngredient } from '@/type/database';
+import { Tables } from '@/type/database-generated';
 
 interface IContext {
   cart?: Tables<'cart'>;
@@ -61,8 +60,8 @@ const CartContextProvider = ({ children }: IProps) => {
 
     const ingredients = cart__ingredients
       .map(({ ingredients, units, quantity }) =>
-        ingredients
-          ? ({ ...ingredients, unit: units ?? undefined, quantity: quantity ?? undefined } satisfies CartIngredient)
+        ingredients && units
+          ? ({ ...ingredients, unit: units, quantity: quantity ?? undefined } satisfies CartIngredient)
           : undefined,
       )
       .filter(isDefined);
