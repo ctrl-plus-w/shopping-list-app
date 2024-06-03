@@ -190,7 +190,7 @@ const CreateUpdateIngredientForm = ({ callback }: IProps) => {
           onChangeText={onSearchCategory}
         />
 
-        {isCategorySuggested ? (
+        {!isCategorySuggested ? (
           suggestedCategories.map((category) => (
             <TouchableOpacity key={category} onPress={() => onSuggestedCategoryClick(category)}>
               <Text>{category}</Text>
