@@ -9,7 +9,7 @@ import CreateUpdateIngredientModal from '@/modal/create-update-ingredient-modal'
 
 import { useCart } from '@/context/cart-context';
 
-import { Tables } from '@/type/database';
+import { CartIngredient } from '@/type/database';
 
 const HomeScreen = () => {
   const { ingredients } = useCart();
@@ -31,7 +31,7 @@ const HomeScreen = () => {
 
           return acc;
         },
-        {} as Record<string, Tables<'ingredients'>[]>,
+        {} as Record<string, CartIngredient[]>,
       ),
     [ingredients],
   );
@@ -53,7 +53,7 @@ const HomeScreen = () => {
               {noCategoryIngredients.map(({ id, name, unit, quantity }) => (
                 <View key={id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <Text>{name}</Text>
-                  <Text>
+                  <Text style={{ color: '#666' }}>
                     {quantity} {unit?.singular}
                   </Text>
                 </View>
@@ -67,8 +67,13 @@ const HomeScreen = () => {
             <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }} key={category}>
               <Text h4>{category}</Text>
 
-              {groupedIngredients[category].map(({ id, name }) => (
-                <Text key={id}>{name}</Text>
+              {groupedIngredients[category].map(({ id, name, quantity, unit }) => (
+                <View key={id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <Text>{name}</Text>
+                  <Text style={{ color: '#666' }}>
+                    {quantity} {unit?.singular}
+                  </Text>
+                </View>
               ))}
             </View>
           ))}
