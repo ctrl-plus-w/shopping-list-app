@@ -10,7 +10,7 @@ module.exports = {
     indent: ['error', 2, { SwitchCase: 1 }],
     quotes: ['error', 'single', { avoidEscape: true }],
     semi: ['error', 'always'],
-    'no-console': ['error', { allow: ['error'] }],
+    'no-console': ['error', { allow: ['error', 'debug'] }],
     // 'no-restricted-imports': ['error', { patterns: [{ group: '.*', name: 'No relative imports' }] }],
 
     'react/react-in-jsx-scope': 'off',
