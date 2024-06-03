@@ -24,6 +24,12 @@ const AuthContextProvider = ({ children }: IProps) => {
   const [session, setSession] = useState<Session | undefined>(undefined);
 
   useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.debug('Session updated :', session?.user.email);
+    }
+  }, [session]);
+
+  useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session ?? undefined);
     });
