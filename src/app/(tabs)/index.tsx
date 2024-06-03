@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -9,10 +9,32 @@ import CreateUpdateIngredientModal from '@/modal/create-update-ingredient-modal'
 
 import { useCart } from '@/context/cart-context';
 
+import { Tables } from '@/type/database';
+
 const HomeScreen = () => {
-  const { cart, ingredients } = useCart();
+  const { ingredients } = useCart();
 
   const createUpdateBottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+  const noCategoryIngredients = useMemo(() => ingredients.filter(({ category }) => !category), [ingredients]);
+
+  const groupedIngredients = useMemo(
+    () =>
+      ingredients.reduce(
+        (acc, curr) => {
+          const category = curr.category;
+
+          if (!category) return acc;
+
+          if (category in acc) acc[category] = [...acc[category], curr];
+          else acc[category] = [curr];
+
+          return acc;
+        },
+        {} as Record<string, Tables<'ingredients'>[]>,
+      ),
+    [ingredients],
+  );
 
   return (
     <CreateUpdateIngredientModal ref={createUpdateBottomSheetModalRef}>
@@ -25,9 +47,30 @@ const HomeScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <View>
-          {ingredients.map(({ id, name }) => (
-            <Text key={id}>{name}</Text>
+        <View style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {noCategoryIngredients.length ? (
+            <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {noCategoryIngredients.map(({ id, name, unit, quantity }) => (
+                <View key={id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <Text>{name}</Text>
+                  <Text>
+                    {quantity} {unit?.singular}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <></>
+          )}
+
+          {Object.keys(groupedIngredients).map((category) => (
+            <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }} key={category}>
+              <Text h4>{category}</Text>
+
+              {groupedIngredients[category].map(({ id, name }) => (
+                <Text key={id}>{name}</Text>
+              ))}
+            </View>
           ))}
         </View>
       </SafeAreaView>

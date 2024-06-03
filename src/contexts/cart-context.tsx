@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 import { useAuth } from '@/context/auth-context';
+import { useCategories } from '@/context/categories-context';
 
 import supabase from '@/instance/supabase';
 
@@ -8,9 +9,11 @@ import { isDefined } from '@/util/array';
 
 import { Tables } from '@/type/database';
 
+type CartIngredient = Tables<'ingredients'> & { quantity?: number; unit?: Tables<'units'> };
+
 interface IContext {
   cart?: Tables<'cart'>;
-  ingredients: Tables<'ingredients'>[];
+  ingredients: CartIngredient[];
   refreshCart: () => Promise<void>;
 }
 
@@ -30,8 +33,10 @@ interface IProps {
 const CartContextProvider = ({ children }: IProps) => {
   const { session } = useAuth();
 
+  const { refreshCategories } = useCategories();
+
   const [cart, setCart] = useState<Tables<'cart'> | undefined>(undefined);
-  const [ingredients, setIngredients] = useState<Tables<'ingredients'>[]>([]);
+  const [ingredients, setIngredients] = useState<CartIngredient[]>([]);
 
   const refreshCart = async () => {
     const userId = session?.user.id;
@@ -39,7 +44,7 @@ const CartContextProvider = ({ children }: IProps) => {
 
     const { data } = await supabase
       .from('cart')
-      .select('*, cart__ingredients ( ingredients(*) )')
+      .select('*, cart__ingredients ( *, units(*), ingredients(*))')
       .eq('user_id', userId)
       .single();
 
@@ -54,10 +59,18 @@ const CartContextProvider = ({ children }: IProps) => {
 
     const { cart__ingredients, ...cart } = data;
 
-    const ingredients = cart__ingredients.map(({ ingredients }) => ingredients).filter(isDefined);
+    const ingredients = cart__ingredients
+      .map(({ ingredients, units, quantity }) =>
+        ingredients
+          ? ({ ...ingredients, unit: units ?? undefined, quantity: quantity ?? undefined } satisfies CartIngredient)
+          : undefined,
+      )
+      .filter(isDefined);
 
     setCart(cart);
     setIngredients(ingredients);
+
+    await refreshCategories();
   };
 
   useEffect(() => {

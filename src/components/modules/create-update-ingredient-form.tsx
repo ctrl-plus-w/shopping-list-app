@@ -8,6 +8,8 @@ import { useAuth } from '@/context/auth-context';
 import { useCart } from '@/context/cart-context';
 import { useUnits } from '@/context/units-context';
 
+import useSuggestedCategories from '@/hook/use-suggested-categories';
+
 import supabase from '@/instance/supabase';
 
 interface IProps {
@@ -15,17 +17,15 @@ interface IProps {
 }
 
 const CreateUpdateIngredientForm = ({ callback }: IProps) => {
-  const { session } = useAuth();
-  const { cart } = useCart();
-
   const { units } = useUnits();
+  const { cart } = useCart();
+  const { session } = useAuth();
 
-  const [categories, setCategories] = useState<string[]>([]);
+  const [suggestedCategories, category, setCategory] = useSuggestedCategories();
 
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState(1);
 
-  const [category, setCategory] = useState('');
   const [isCategorySuggested, setIsCategorySuggested] = useState(false);
 
   const [selectedUnitId, setSelectedUnitId] = useState('');
@@ -33,32 +33,15 @@ const CreateUpdateIngredientForm = ({ callback }: IProps) => {
 
   const parentUnits = useMemo(() => units.filter((unit) => !unit.parent_category_id), [units]);
 
-  useEffect(() => {
-    if (!session) return;
-
-    const fetchCategories = async () => {
-      const { data } = await supabase.rpc('get_user_categories', { uid: session.user.id });
-      if (data) setCategories(data);
-    };
-
-    fetchCategories().then();
-  }, [session]);
-
-  const suggestedCategories = useMemo(() => {
-    return category === '' || isCategorySuggested
-      ? []
-      : categories.filter((category) => category.toLowerCase().includes(category.toLowerCase()));
-  }, [category, categories, isCategorySuggested]);
-
   const onSubmit = async () => {
-    if (!cart) return;
+    if (!cart || !session) return;
 
     if (selectedUnitId === '' || name === '') return;
 
     try {
       const { data: createdIngredient, error: createIngredientError } = await supabase
         .from('ingredients')
-        .insert({ name, category })
+        .insert({ name, category, user_id: session.user.id })
         .select('id')
         .single();
 
@@ -207,11 +190,15 @@ const CreateUpdateIngredientForm = ({ callback }: IProps) => {
           onChangeText={onSearchCategory}
         />
 
-        {suggestedCategories.map((category) => (
-          <TouchableOpacity key={category} onPress={() => onSuggestedCategoryClick(category)}>
-            <Text>{category}</Text>
-          </TouchableOpacity>
-        ))}
+        {isCategorySuggested ? (
+          suggestedCategories.map((category) => (
+            <TouchableOpacity key={category} onPress={() => onSuggestedCategoryClick(category)}>
+              <Text>{category}</Text>
+            </TouchableOpacity>
+          ))
+        ) : (
+          <></>
+        )}
       </View>
     </View>
   );
