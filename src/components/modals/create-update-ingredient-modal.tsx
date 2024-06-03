@@ -10,12 +10,15 @@ import ModalBackdrop from '@/element/modal-backdrop';
 
 import { useCart } from '@/context/cart-context';
 
+import { TCartIngredient } from '@/type/database';
+
 interface IProps {
+  ingredient?: TCartIngredient;
   children?: ReactNode;
 }
 
 const CreateUpdateIngredientModal = (
-  { children }: IProps,
+  { ingredient, children }: IProps,
   createUpdateBottomSheetModalRef: ForwardedRef<BottomSheetModal>,
 ) => {
   const { refreshCart } = useCart();
@@ -40,11 +43,11 @@ const CreateUpdateIngredientModal = (
           <BottomSheetModal
             backdropComponent={ModalBackdrop}
             ref={createUpdateBottomSheetModalRef}
-            index={1}
             snapPoints={snapPoints}
+            index={1}
           >
             <BottomSheetView style={styles.contentContainer}>
-              <CreateUpdateIngredientForm callback={afterCreateUpdateIngredient} />
+              <CreateUpdateIngredientForm ingredient={ingredient} callback={afterCreateUpdateIngredient} />
             </BottomSheetView>
           </BottomSheetModal>
         </View>

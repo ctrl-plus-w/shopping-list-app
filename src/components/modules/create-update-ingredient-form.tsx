@@ -12,10 +12,10 @@ import useSuggestedCategories from '@/hook/use-suggested-categories';
 
 import supabase from '@/instance/supabase';
 
-import { CartIngredient } from '@/type/database';
+import { TCartIngredient } from '@/type/database';
 
 interface IProps {
-  ingredient?: CartIngredient;
+  ingredient?: TCartIngredient;
   callback?: () => void | Promise<void>;
 }
 
@@ -29,7 +29,7 @@ const CreateUpdateIngredientForm = ({ ingredient, callback }: IProps) => {
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState(1);
 
-  const [isCategorySuggested, setIsCategorySuggested] = useState(false);
+  const [showCategoriesSuggestions, setShowCategoriesSuggestions] = useState(false);
 
   const [selectedUnitId, setSelectedUnitId] = useState('');
   const [selectedSubUnitId, setSelectedSubUnitId] = useState('');
@@ -42,6 +42,11 @@ const CreateUpdateIngredientForm = ({ ingredient, callback }: IProps) => {
     setName(ingredient.name);
     setQuantity(ingredient.quantity ?? 1);
 
+    if (ingredient.category && ingredient.category !== '') {
+      setCategory(ingredient.category);
+      setShowCategoriesSuggestions(false);
+    }
+
     if (ingredient.unit) {
       if (ingredient.unit.parent_category_id) {
         setSelectedUnitId(ingredient.unit.parent_category_id);
@@ -52,32 +57,64 @@ const CreateUpdateIngredientForm = ({ ingredient, callback }: IProps) => {
     }
   }, [ingredient]);
 
-  const onSubmit = async () => {
+  const createIngredient = async () => {
     if (!cart || !session) return;
 
+    const { data: createdIngredient, error: createIngredientError } = await supabase
+      .from('ingredients')
+      .insert({ name, category, user_id: session.user.id })
+      .select('id')
+      .single();
+
+    if (createIngredientError) throw createIngredientError;
+    if (!createdIngredient) throw new Error('Ingredient failed to be created.');
+
+    const { error } = await supabase
+      .from('cart__ingredients')
+      .insert({
+        unit_id: selectedSubUnitId === '' ? selectedUnitId : selectedSubUnitId,
+        quantity: quantity,
+        ingredient_id: createdIngredient.id,
+        cart_id: cart.id,
+      })
+      .select('*');
+
+    if (error) throw error;
+  };
+
+  const updateIngredient = async () => {
+    if (!cart || !session || !ingredient) return;
+
+    const { data: updatedIngredient, error: updateIngredientError } = await supabase
+      .from('ingredients')
+      .update({ name, category })
+      .eq('id', ingredient.id)
+      .select('id')
+      .single();
+
+    if (updateIngredientError) throw updateIngredientError;
+    if (!updatedIngredient) throw new Error('Ingredient failed to be updated.');
+
+    const { error } = await supabase
+      .from('cart__ingredients')
+      .update({
+        unit_id: selectedSubUnitId === '' ? selectedUnitId : selectedSubUnitId,
+        quantity: quantity,
+      })
+      .eq('ingredient_id', updatedIngredient.id)
+      .eq('cart_id', cart.id)
+      .select('*');
+
+    if (error) throw error;
+  };
+
+  const onSubmit = async () => {
     if (selectedUnitId === '' || name === '') return;
 
     try {
-      const { data: createdIngredient, error: createIngredientError } = await supabase
-        .from('ingredients')
-        .insert({ name, category, user_id: session.user.id })
-        .select('id')
-        .single();
+      if (!ingredient) await createIngredient();
+      else await updateIngredient();
 
-      if (createIngredientError) throw createIngredientError;
-      if (!createdIngredient) throw new Error('Ingredient failed to be created.');
-
-      const { error } = await supabase
-        .from('cart__ingredients')
-        .insert({
-          unit_id: selectedSubUnitId === '' ? selectedUnitId : selectedSubUnitId,
-          quantity: quantity,
-          ingredient_id: createdIngredient.id,
-          cart_id: cart.id,
-        })
-        .select('*');
-
-      if (error) throw error;
       callback && callback();
     } catch (err) {
       console.error(err);
@@ -91,12 +128,12 @@ const CreateUpdateIngredientForm = ({ ingredient, callback }: IProps) => {
 
   const onSearchCategory = (text: string) => {
     setCategory(text);
-    setIsCategorySuggested(false);
+    setShowCategoriesSuggestions(true);
   };
 
   const onSuggestedCategoryClick = (category: string) => {
     setCategory(category);
-    setIsCategorySuggested(true);
+    setShowCategoriesSuggestions(false);
   };
 
   const incrementQuantity = (value: number) => () => {
@@ -209,7 +246,7 @@ const CreateUpdateIngredientForm = ({ ingredient, callback }: IProps) => {
           onChangeText={onSearchCategory}
         />
 
-        {!isCategorySuggested ? (
+        {showCategoriesSuggestions ? (
           suggestedCategories.map((category) => (
             <TouchableOpacity key={category} onPress={() => onSuggestedCategoryClick(category)}>
               <Text>{category}</Text>

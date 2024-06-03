@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -7,12 +7,18 @@ import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import CreateUpdateIngredientModal from '@/modal/create-update-ingredient-modal';
 
+import CartIngredient from '@/element/cart-ingredient';
+
 import { useCart } from '@/context/cart-context';
 
-import { CartIngredient } from '@/type/database';
+import { compareIngredientName } from '@/util/array';
+
+import { TCartIngredient } from '@/type/database';
 
 const HomeScreen = () => {
   const { ingredients } = useCart();
+
+  const [updatingIngredient, setUpdatingIngredient] = useState<TCartIngredient | undefined>(undefined);
 
   const createUpdateBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
@@ -31,13 +37,18 @@ const HomeScreen = () => {
 
           return acc;
         },
-        {} as Record<string, CartIngredient[]>,
+        {} as Record<string, TCartIngredient[]>,
       ),
     [ingredients],
   );
 
+  const openUpdateIngredientModal = (ingredient: TCartIngredient) => () => {
+    setUpdatingIngredient(ingredient);
+    createUpdateBottomSheetModalRef.current?.present();
+  };
+
   return (
-    <CreateUpdateIngredientModal ref={createUpdateBottomSheetModalRef}>
+    <CreateUpdateIngredientModal ingredient={updatingIngredient} ref={createUpdateBottomSheetModalRef}>
       <SafeAreaView style={styles.safeArea}>
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Text h2>Ingrédients</Text>
@@ -50,33 +61,33 @@ const HomeScreen = () => {
         <View style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {noCategoryIngredients.length ? (
             <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {noCategoryIngredients.map(({ id, name, unit, quantity }) => (
-                <View key={id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <Text>{name}</Text>
-                  <Text style={{ color: '#666' }}>
-                    {quantity} {unit?.singular}
-                  </Text>
-                </View>
+              {noCategoryIngredients.sort(compareIngredientName).map((ingredient) => (
+                <CartIngredient
+                  ingredient={ingredient}
+                  onPress={openUpdateIngredientModal(ingredient)}
+                  key={ingredient.id}
+                />
               ))}
             </View>
           ) : (
             <></>
           )}
 
-          {Object.keys(groupedIngredients).map((category) => (
-            <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }} key={category}>
-              <Text h4>{category}</Text>
+          {Object.keys(groupedIngredients)
+            .sort()
+            .map((category) => (
+              <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }} key={category}>
+                <Text h4>{category}</Text>
 
-              {groupedIngredients[category].map(({ id, name, quantity, unit }) => (
-                <View key={id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <Text>{name}</Text>
-                  <Text style={{ color: '#666' }}>
-                    {quantity} {unit?.singular}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          ))}
+                {groupedIngredients[category].sort(compareIngredientName).map((ingredient) => (
+                  <CartIngredient
+                    ingredient={ingredient}
+                    onPress={openUpdateIngredientModal(ingredient)}
+                    key={ingredient.id}
+                  />
+                ))}
+              </View>
+            ))}
         </View>
       </SafeAreaView>
     </CreateUpdateIngredientModal>

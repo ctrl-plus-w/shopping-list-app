@@ -7,12 +7,12 @@ import supabase from '@/instance/supabase';
 
 import { isDefined } from '@/util/array';
 
-import { CartIngredient } from '@/type/database';
+import { TCartIngredient } from '@/type/database';
 import { Tables } from '@/type/database-generated';
 
 interface IContext {
   cart?: Tables<'cart'>;
-  ingredients: CartIngredient[];
+  ingredients: TCartIngredient[];
   refreshCart: () => Promise<void>;
 }
 
@@ -35,7 +35,7 @@ const CartContextProvider = ({ children }: IProps) => {
   const { refreshCategories } = useCategories();
 
   const [cart, setCart] = useState<Tables<'cart'> | undefined>(undefined);
-  const [ingredients, setIngredients] = useState<CartIngredient[]>([]);
+  const [ingredients, setIngredients] = useState<TCartIngredient[]>([]);
 
   const refreshCart = async () => {
     const userId = session?.user.id;
@@ -61,7 +61,7 @@ const CartContextProvider = ({ children }: IProps) => {
     const ingredients = cart__ingredients
       .map(({ ingredients, units, quantity }) =>
         ingredients && units
-          ? ({ ...ingredients, unit: units, quantity: quantity ?? undefined } satisfies CartIngredient)
+          ? ({ ...ingredients, unit: units, quantity: quantity ?? undefined } satisfies TCartIngredient)
           : undefined,
       )
       .filter(isDefined);
