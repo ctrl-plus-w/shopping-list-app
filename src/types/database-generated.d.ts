@@ -23,7 +23,7 @@ export type Database = {
           {
             foreignKeyName: 'cart_user_id_fkey';
             columns: ['user_id'];
-            isOneToOne: false;
+            isOneToOne: true;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
@@ -94,13 +94,6 @@ export type Database = {
             columns: ['cart_id'];
             isOneToOne: false;
             referencedRelation: 'cart';
-            referencedColumns: ['id'];
-          },
-          {
-            foreignKeyName: 'cart__recipes_ingredient_id_fkey';
-            columns: ['recipe_id'];
-            isOneToOne: false;
-            referencedRelation: 'ingredients';
             referencedColumns: ['id'];
           },
           {

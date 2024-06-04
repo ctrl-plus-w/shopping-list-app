@@ -10,7 +10,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "supabase:gen-types": "supabase gen types typescript --local --schema public > src/types/database-generated.d.ts && prettier -w src/types/database-generated.d.ts"
   },
   "jest": {
     "preset": "jest-expo"
