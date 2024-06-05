@@ -1,4 +1,4 @@
-import { ForwardedRef, forwardRef, ReactNode, useCallback, useMemo } from 'react';
+import { ForwardedRef, forwardRef, ReactElement, ReactNode, useCallback, useMemo } from 'react';
 
 import { BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from '@gorhom/bottom-sheet';
 import { StyleSheet, View } from 'react-native';
@@ -12,18 +12,19 @@ import { useCart } from '@/context/cart-context';
 
 import { CreateIngredientHandler, UpdateIngredientHandler } from '@/util/ingredients';
 
-import { TCartIngredient, TRecipeIngredient } from '@/type/database';
+import { TIngredientKind } from '@/type/database';
 
-interface IProps {
+interface IProps<T extends TIngredientKind> {
   children?: ReactNode;
+  callback?: ((ingredient: T) => void) | ((ingredient: T) => Promise<void>);
 
-  ingredient?: TCartIngredient | TRecipeIngredient;
-  createHandler: CreateIngredientHandler;
-  updateHandler: UpdateIngredientHandler;
+  ingredient?: T;
+  createHandler: CreateIngredientHandler<T>;
+  updateHandler: UpdateIngredientHandler<T>;
 }
 
-const CreateUpdateIngredientModal = (
-  { ingredient, children, createHandler, updateHandler }: IProps,
+const CreateUpdateIngredientModal = <T extends TIngredientKind>(
+  { ingredient, children, createHandler, updateHandler, callback }: IProps<T>,
   createUpdateBottomSheetModalRef: ForwardedRef<BottomSheetModal>,
 ) => {
   const { refreshCart } = useCart();
@@ -34,9 +35,11 @@ const CreateUpdateIngredientModal = (
       createUpdateBottomSheetModalRef?.current?.close();
   }, []);
 
-  const afterCreateUpdateIngredient = () => {
+  const afterCreateUpdateIngredient = (recipe: T) => {
     refreshCart().then();
     closeModal();
+
+    callback && callback(recipe);
   };
 
   return (
@@ -64,7 +67,13 @@ const CreateUpdateIngredientModal = (
   );
 };
 
-export default forwardRef<BottomSheetModal, IProps>(CreateUpdateIngredientModal);
+export default forwardRef(CreateUpdateIngredientModal) as <T extends TIngredientKind>({
+  ingredient,
+  children,
+  createHandler,
+  updateHandler,
+  callback,
+}: IProps<T> & { ref?: ForwardedRef<BottomSheetModal> }) => ReactElement;
 
 const styles = StyleSheet.create({
   safeArea: {

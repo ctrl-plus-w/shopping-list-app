@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { SafeAreaView, StyleSheet } from 'react-native';
 
 import CreateUpdateRecipeForm from '@/module/create-update-recipe-form';
 
@@ -9,7 +9,9 @@ import { useRecipes } from '@/context/recipes-context';
 
 import supabase from '@/instance/supabase';
 
-import { TRecipe } from '@/type/database';
+import { isDefined } from '@/util/array';
+
+import { TRecipe, TRecipeIngredient } from '@/type/database';
 
 const CreateUpdateRecipeScreen = () => {
   const router = useRouter();
@@ -24,14 +26,29 @@ const CreateUpdateRecipeScreen = () => {
     try {
       const { data, error } = await supabase
         .from('recipes')
-        .select('*, ingredients!recipes__ingredients (*)')
+        .select('*, recipes__ingredients (*, ingredients(*), units(*))')
         .eq('id', recipeId)
         .single();
 
       if (error) throw error;
       if (!data) throw new Error('Recipe not found.');
 
-      setRecipe(data);
+      const { recipes__ingredients, ...recipe } = data;
+
+      const ingredients = recipes__ingredients
+        .map(({ ingredients, quantity, units }) => {
+          if (!ingredients || !units) return undefined;
+
+          return {
+            ...ingredients,
+            category: ingredients.category,
+            unit: units ?? undefined,
+            quantity: quantity ?? undefined,
+          } satisfies TRecipeIngredient;
+        })
+        .filter(isDefined);
+
+      setRecipe({ ...recipe, ingredients });
     } catch (err) {
       console.error(err);
     }
@@ -41,10 +58,6 @@ const CreateUpdateRecipeScreen = () => {
     if (!id || id === '') return;
     fetchRecipe(id).then();
   }, [id]);
-
-  useEffect(() => {
-    if (!recipe) return;
-  }, [recipe]);
 
   const createUpdateRecipeCallback = () => {
     refreshRecipes().then();
@@ -60,9 +73,7 @@ const CreateUpdateRecipeScreen = () => {
         }}
       />
 
-      <View style={styles.container}>
-        <CreateUpdateRecipeForm recipe={recipe} callback={createUpdateRecipeCallback} />
-      </View>
+      <CreateUpdateRecipeForm setRecipe={setRecipe} recipe={recipe} callback={createUpdateRecipeCallback} />
     </SafeAreaView>
   );
 };
@@ -73,10 +84,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'column',
     gap: 8,
-    margin: 16,
-  },
-  container: {
-    flex: 1,
+    // margin: 16,
   },
   contentContainer: {
     flex: 1,

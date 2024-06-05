@@ -7,14 +7,14 @@ import IngredientCard from '@/element/ingredient-card';
 
 import { compareIngredientName } from '@/util/array';
 
-import { IngredientKind } from '@/type/database';
+import { TIngredientKind } from '@/type/database';
 
-interface IProps<T extends IngredientKind = IngredientKind> {
+interface IProps<T extends TIngredientKind = TIngredientKind> {
   ingredients: T[];
   onPress: (ingredient: T) => void;
 }
 
-const IngredientsList = <T extends IngredientKind>({ ingredients, onPress }: IProps<T>) => {
+const IngredientsList = <T extends TIngredientKind>({ ingredients, onPress }: IProps<T>) => {
   const noCategoryIngredients = useMemo(() => ingredients.filter(({ category }) => !category), [ingredients]);
 
   const groupedIngredients = useMemo(

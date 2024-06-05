@@ -28,25 +28,11 @@ const RecipesScreen = () => {
         </Link>
       </View>
 
-      {recipes.map((recipe) => (
-        <RecipeCard recipe={recipe} onPress={onPressRecipeCard(recipe)} key={recipe.id} />
-      ))}
-
-      {/*<View style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>*/}
-      {/*  {noCategoryIngredients.length ? (*/}
-      {/*    <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>*/}
-      {/*      {noCategoryIngredients.sort(compareIngredientName).map((ingredient) => (*/}
-      {/*        <IngredientCard*/}
-      {/*          ingredient={ingredient}*/}
-      {/*          onPress={openUpdateIngredientModal(ingredient)}*/}
-      {/*          key={ingredient.id}*/}
-      {/*        />*/}
-      {/*      ))}*/}
-      {/*    </View>*/}
-      {/*  ) : (*/}
-      {/*    <></>*/}
-      {/*  )}*/}
-      {/*</View>*/}
+      <View style={{ display: 'flex', flexDirection: 'column' }}>
+        {recipes.map((recipe) => (
+          <RecipeCard recipe={recipe} onPress={onPressRecipeCard(recipe)} key={recipe.id} showAddToCartButton />
+        ))}
+      </View>
     </SafeAreaView>
   );
 };

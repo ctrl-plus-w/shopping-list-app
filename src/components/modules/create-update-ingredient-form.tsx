@@ -12,17 +12,22 @@ import useSuggestedCategories from '@/hook/use-suggested-categories';
 
 import { CreateIngredientHandler, UpdateIngredientHandler } from '@/util/ingredients';
 
-import { TCartIngredient } from '@/type/database';
+import { TIngredientKind } from '@/type/database';
 
-export interface IProps {
-  ingredient?: TCartIngredient;
-  callback?: () => void | Promise<void>;
+export interface IProps<T extends TIngredientKind> {
+  ingredient?: T;
+  callback?: ((ingredient: T) => void) | ((ingredient: T) => Promise<void>);
 
-  createHandler: CreateIngredientHandler;
-  updateHandler: UpdateIngredientHandler;
+  createHandler: CreateIngredientHandler<T>;
+  updateHandler: UpdateIngredientHandler<T>;
 }
 
-const CreateUpdateIngredientForm = ({ ingredient, createHandler, updateHandler, callback }: IProps) => {
+const CreateUpdateIngredientForm = <T extends TIngredientKind>({
+  ingredient,
+  createHandler,
+  updateHandler,
+  callback,
+}: IProps<T>) => {
   const { units } = useUnits();
   const { cart } = useCart();
   const { session } = useAuth();
@@ -67,10 +72,11 @@ const CreateUpdateIngredientForm = ({ ingredient, createHandler, updateHandler, 
       const unitId = selectedSubUnitId === '' ? selectedUnitId : selectedSubUnitId;
       const data = { name, quantity, category, unitId };
 
-      if (!ingredient) await createHandler(cart, session, data);
-      else await updateHandler(cart, ingredient.id, data);
+      const _ingredient = await (!ingredient
+        ? createHandler(cart, session, data)
+        : updateHandler(cart, ingredient.id, data));
 
-      callback && callback();
+      callback && callback(_ingredient);
     } catch (err) {
       console.error(err);
     }

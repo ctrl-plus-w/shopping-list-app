@@ -7,17 +7,19 @@ import supabase from '@/instance/supabase';
 
 import { isDefined } from '@/util/array';
 
-import { TCartIngredient } from '@/type/database';
+import { TCartIngredient, TRecipe } from '@/type/database';
 import { Tables } from '@/type/database-generated';
 
 interface IContext {
   cart?: Tables<'cart'>;
   ingredients: TCartIngredient[];
+  recipes: TRecipe[];
   refreshCart: () => Promise<void>;
 }
 
 const defaultContext = {
   ingredients: [],
+  recipes: [],
   refreshCart: () => Promise.resolve(),
 } satisfies IContext;
 
@@ -36,14 +38,21 @@ const CartContextProvider = ({ children }: IProps) => {
 
   const [cart, setCart] = useState<Tables<'cart'> | undefined>(undefined);
   const [ingredients, setIngredients] = useState<TCartIngredient[]>([]);
+  const [recipes, setRecipes] = useState<TRecipe[]>([]);
 
   const refreshCart = async () => {
     const userId = session?.user.id;
     if (!userId) return;
 
+    // const { data } = await supabase
+    //   .from('cart')
+    //   .select('*, cart__ingredients(*, units(*), ingredients(*)), cart__recipes(*, recipes(*, ingredients(*)))')
+    //   .eq('user_id', userId)
+    //   .single();
+
     const { data } = await supabase
       .from('cart')
-      .select('*, cart__ingredients ( *, units(*), ingredients(*))')
+      .select('*, cart__ingredients(*, units(*), ingredients(*)), cart__recipes(*, recipes(*, ingredients(*)))')
       .eq('user_id', userId)
       .single();
 
@@ -52,11 +61,12 @@ const CartContextProvider = ({ children }: IProps) => {
 
       setCart(data ?? undefined);
       setIngredients([]);
+      setRecipes([]);
 
       return;
     }
 
-    const { cart__ingredients, ...cart } = data;
+    const { cart__ingredients, cart__recipes, ...cart } = data;
 
     const ingredients = cart__ingredients
       .map(({ ingredients, units, quantity }) =>
@@ -66,8 +76,13 @@ const CartContextProvider = ({ children }: IProps) => {
       )
       .filter(isDefined);
 
+    const recipes = cart__recipes
+      .map(({ recipes }) => (recipes ? { ...recipes, ingredients: [] } : undefined))
+      .filter(isDefined);
+
     setCart(cart);
     setIngredients(ingredients);
+    setRecipes(recipes);
 
     await refreshCategories();
   };
@@ -76,7 +91,7 @@ const CartContextProvider = ({ children }: IProps) => {
     refreshCart().then();
   }, [session]);
 
-  return <CartContext.Provider value={{ cart, ingredients, refreshCart }}>{children}</CartContext.Provider>;
+  return <CartContext.Provider value={{ cart, ingredients, recipes, refreshCart }}>{children}</CartContext.Provider>;
 };
 
 export default CartContextProvider;

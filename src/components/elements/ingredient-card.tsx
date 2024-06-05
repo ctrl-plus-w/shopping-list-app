@@ -1,14 +1,14 @@
 import { Text } from '@rneui/themed';
 import { TouchableOpacity, View } from 'react-native';
 
-import { IngredientKind } from '@/type/database';
+import { TIngredientKind } from '@/type/database';
 
-interface IProps<T extends IngredientKind> {
+interface IProps<T extends TIngredientKind> {
   ingredient: T;
   onPress: () => void;
 }
 
-const IngredientCard = <T extends IngredientKind>({ ingredient, onPress }: IProps<T>) => {
+const IngredientCard = <T extends TIngredientKind>({ ingredient, onPress }: IProps<T>) => {
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

@@ -9,6 +9,8 @@ import CreateUpdateIngredientModal from '@/modal/create-update-ingredient-modal'
 
 import IngredientsList from '@/module/ingredients-list';
 
+import RecipeCard from '@/element/recipe-card';
+
 import { useCart } from '@/context/cart-context';
 
 import { createCartIngredient, updateCartIngredient } from '@/util/ingredients';
@@ -16,7 +18,7 @@ import { createCartIngredient, updateCartIngredient } from '@/util/ingredients';
 import { TCartIngredient } from '@/type/database';
 
 const HomeScreen = () => {
-  const { ingredients } = useCart();
+  const { ingredients, recipes } = useCart();
 
   const [updatingIngredient, setUpdatingIngredient] = useState<TCartIngredient | undefined>(undefined);
 
@@ -35,6 +37,14 @@ const HomeScreen = () => {
       ref={createUpdateBottomSheetModalRef}
     >
       <SafeAreaView style={styles.safeArea}>
+        <Text h2>Recettes</Text>
+
+        <View style={{ display: 'flex', flexDirection: 'column' }}>
+          {recipes.map((recipe) => (
+            <RecipeCard recipe={recipe} onPress={() => null} key={recipe.id} />
+          ))}
+        </View>
+
         <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Text h2>Ingrédients</Text>
 

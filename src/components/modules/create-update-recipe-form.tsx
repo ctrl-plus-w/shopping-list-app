@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { Dispatch, ReactNode, SetStateAction, useEffect, useRef, useState } from 'react';
 
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { Button } from '@rneui/themed';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Button, Text } from '@rneui/themed';
+import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import CreateUpdateIngredientModal from '@/modal/create-update-ingredient-modal';
 
@@ -19,12 +19,23 @@ import { TRecipe, TRecipeIngredient } from '@/type/database';
 
 interface IProps {
   recipe?: TRecipe;
+  setRecipe: Dispatch<SetStateAction<TRecipe | undefined>>;
+
   callback?: () => void | Promise<void>;
 
   onPressIngredient: (ingredient: TRecipeIngredient) => void;
+  onPressCreateIngredient?: () => void;
+
+  children?: ReactNode;
 }
 
-const CreateUpdateRecipeFormCore = ({ recipe, callback, onPressIngredient }: IProps) => {
+const CreateUpdateRecipeFormCore = ({
+  children,
+  recipe,
+  callback,
+  onPressIngredient,
+  onPressCreateIngredient,
+}: IProps) => {
   const { session } = useAuth();
 
   const [name, setName] = useState('');
@@ -121,15 +132,29 @@ const CreateUpdateRecipeFormCore = ({ recipe, callback, onPressIngredient }: IPr
           </TouchableOpacity>
         </View>
 
+        {onPressCreateIngredient ? (
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text h2>Ingrédients</Text>
+
+            <TouchableOpacity onPress={onPressCreateIngredient}>
+              <Ionicons name="add" size={32} />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <></>
+        )}
+
         <IngredientsList ingredients={recipe?.ingredients ?? []} onPress={onPressIngredient} />
       </View>
+
+      {children}
 
       <Button onPress={onSubmit}>{recipe ? 'Modifier la recette' : 'Créer la recette'}</Button>
     </View>
   );
 };
 
-const CreateUpdateRecipeForm = ({ recipe, callback }: Omit<IProps, 'onPressIngredient'>) => {
+const CreateUpdateRecipeForm = ({ recipe, callback, setRecipe }: Omit<IProps, 'onPressIngredient'>) => {
   const createUpdateBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   const [updatingIngredient, setUpdatingIngredient] = useState<TRecipeIngredient | undefined>(undefined);
@@ -139,17 +164,38 @@ const CreateUpdateRecipeForm = ({ recipe, callback }: Omit<IProps, 'onPressIngre
     setUpdatingIngredient(ingredient);
   };
 
+  const onPressCreateIngredient = () => {
+    createUpdateBottomSheetModalRef.current?.present();
+    setUpdatingIngredient(undefined);
+  };
+
+  const onCreateUpdateIngredient = (ingredient: TRecipeIngredient) => {
+    setRecipe((recipe) => {
+      if (!recipe) return recipe;
+
+      const isIngredientInRecipe =
+        recipe.ingredients.findIndex((_ingredient) => _ingredient.id === ingredient.id) !== -1;
+
+      const ingredients = isIngredientInRecipe
+        ? recipe.ingredients.map((_ingredient) => (ingredient.id !== _ingredient.id ? _ingredient : ingredient))
+        : [...recipe.ingredients, ingredient];
+
+      return { ...recipe, ingredients };
+    });
+  };
+
   return recipe ? (
-    <CreateUpdateIngredientModal
+    <CreateUpdateIngredientModal<TRecipeIngredient>
       ref={createUpdateBottomSheetModalRef}
       ingredient={updatingIngredient}
       updateHandler={updateRecipeIngredient(recipe.id)}
       createHandler={createRecipeIngredient(recipe.id)}
+      callback={onCreateUpdateIngredient}
     >
-      <CreateUpdateRecipeFormCore {...{ recipe, callback, onPressIngredient }} />
+      <CreateUpdateRecipeFormCore {...{ recipe, callback, setRecipe, onPressIngredient, onPressCreateIngredient }} />
     </CreateUpdateIngredientModal>
   ) : (
-    <CreateUpdateRecipeFormCore {...{ recipe, callback, onPressIngredient }} />
+    <CreateUpdateRecipeFormCore {...{ recipe, callback, setRecipe, onPressIngredient }} />
   );
 };
 
@@ -159,6 +205,7 @@ const styles = StyleSheet.create({
     borderColor: 'red',
     display: 'flex',
     gap: 16,
+    margin: 16,
   },
   row: {
     display: 'flex',
