@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useState } from 'react';
 
 import { useAuth } from '@/context/auth-context';
 import { useCategories } from '@/context/categories-context';
@@ -14,13 +14,23 @@ interface IContext {
   cart?: Tables<'cart'>;
   ingredients: TCartIngredient[];
   recipes: TCartRecipe[];
+
   refreshCart: () => Promise<void>;
+
+  setCart: Dispatch<SetStateAction<Tables<'cart'> | undefined>>;
+  setIngredients: Dispatch<SetStateAction<TCartIngredient[]>>;
+  setRecipes: Dispatch<SetStateAction<TCartRecipe[]>>;
 }
 
 const defaultContext = {
   ingredients: [],
   recipes: [],
+
   refreshCart: () => Promise.resolve(),
+
+  setCart: () => undefined,
+  setRecipes: () => [],
+  setIngredients: () => [],
 } satisfies IContext;
 
 export const CartContext = createContext<IContext>(defaultContext);
@@ -121,7 +131,23 @@ const CartContextProvider = ({ children }: IProps) => {
     refreshCart().then();
   }, [session]);
 
-  return <CartContext.Provider value={{ cart, ingredients, recipes, refreshCart }}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider
+      value={{
+        cart,
+        ingredients,
+        recipes,
+
+        refreshCart,
+
+        setCart,
+        setIngredients,
+        setRecipes,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
 };
 
 export default CartContextProvider;
