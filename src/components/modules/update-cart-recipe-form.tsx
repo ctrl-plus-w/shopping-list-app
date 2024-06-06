@@ -30,8 +30,6 @@ const UpdateCartRecipeForm = ({ children, recipe, callback }: IProps) => {
     try {
       const _recipe = await updateCartRecipe(recipe.id, { title: recipe.title, servings });
 
-      // TODO: Update the cart recipe.
-
       callback && callback(_recipe);
     } catch (err) {
       console.error(err);
