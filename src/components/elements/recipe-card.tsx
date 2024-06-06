@@ -8,10 +8,10 @@ import { useCart } from '@/context/cart-context';
 
 import supabase from '@/instance/supabase';
 
-import { Tables } from '@/type/database-generated';
+import { TCartRecipe, TRecipe } from '@/type/database';
 
 interface IProps {
-  recipe: Tables<'recipes'>;
+  recipe: TCartRecipe | TRecipe;
   onPress: () => void;
 
   showAddToCartButton?: boolean;
@@ -53,7 +53,9 @@ const RecipeCard = ({ recipe, onPress, showAddToCartButton = false }: IProps) =>
       <TouchableOpacity style={{ flex: 1 }} onPress={onPress}>
         <View style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <Text>{recipe.title}</Text>
-          <Text style={{ color: '#666' }}>{recipe.servings} personnes</Text>
+          <Text style={{ color: '#666' }}>
+            {'cart_servings' in recipe ? recipe.cart_servings : recipe.servings} personnes
+          </Text>
         </View>
       </TouchableOpacity>
 

@@ -11,9 +11,8 @@ import IngredientsList from '@/module/ingredients-list';
 
 import { useAuth } from '@/context/auth-context';
 
-import supabase from '@/instance/supabase';
-
 import { createRecipeIngredient, updateRecipeIngredient } from '@/util/ingredients';
+import { CreateRecipeHandler, UpdateRecipeHandler } from '@/util/recipes';
 
 import { TRecipe, TRecipeIngredient } from '@/type/database';
 
@@ -26,6 +25,9 @@ interface IProps {
   onPressIngredient: (ingredient: TRecipeIngredient) => void;
   onPressCreateIngredient?: () => void;
 
+  createHandler: CreateRecipeHandler<TRecipe>;
+  updateHandler: UpdateRecipeHandler<TRecipe>;
+
   children?: ReactNode;
 }
 
@@ -35,6 +37,8 @@ const CreateUpdateRecipeFormCore = ({
   callback,
   onPressIngredient,
   onPressCreateIngredient,
+  createHandler,
+  updateHandler,
 }: IProps) => {
   const { session } = useAuth();
 
@@ -48,34 +52,14 @@ const CreateUpdateRecipeFormCore = ({
     setServings(recipe.servings);
   }, [recipe]);
 
-  const createRecipe = async () => {
-    if (!supabase || !session) return;
-
-    const { data: createdRecipe, error: createRecipeError } = await supabase
-      .from('recipes')
-      .insert({ title: name, servings: servings, user_id: session.user.id })
-      .select('id')
-      .single();
-
-    if (createRecipeError) throw createRecipeError;
-    if (!createdRecipe) throw new Error('Failed to create the recipe.');
-  };
-
-  const updateRecipe = async (recipeId: string) => {
-    if (!supabase || !session) return;
-
-    const { error: updateRecipeError } = await supabase
-      .from('recipes')
-      .update({ title: name, servings: servings })
-      .eq('id', recipeId);
-
-    if (updateRecipeError) throw updateRecipeError;
-  };
-
   const onSubmit = async () => {
+    if (!session) return;
+
     try {
-      if (!recipe) await createRecipe();
-      else await updateRecipe(recipe.id);
+      const data = { title: name, servings };
+
+      if (!recipe) await createHandler(session, data);
+      else await updateHandler(recipe.id, data);
 
       callback && callback();
     } catch (err) {
@@ -96,9 +80,9 @@ const CreateUpdateRecipeFormCore = ({
     <View style={styles.container}>
       <View style={[styles.row, styles.centerVertical]}>
         <TextInput style={styles.nameInput} value={name} onChangeText={setName} placeholder="Nom de la recette" />
-        <TouchableOpacity style={styles.submitButton} onPress={onSubmit}>
-          <Ionicons name="checkmark" size={24} color="black" />
-        </TouchableOpacity>
+        {/*<TouchableOpacity style={styles.submitButton} onPress={onSubmit}>*/}
+        {/*  <Ionicons name="checkmark" size={24} color="black" />*/}
+        {/*</TouchableOpacity>*/}
       </View>
 
       <View style={[styles.col, { gap: 12 }]}>
@@ -154,7 +138,13 @@ const CreateUpdateRecipeFormCore = ({
   );
 };
 
-const CreateUpdateRecipeForm = ({ recipe, callback, setRecipe }: Omit<IProps, 'onPressIngredient'>) => {
+const CreateUpdateRecipeForm = ({
+  recipe,
+  callback,
+  setRecipe,
+  createHandler,
+  updateHandler,
+}: Omit<IProps, 'onPressIngredient'>) => {
   const createUpdateBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   const [updatingIngredient, setUpdatingIngredient] = useState<TRecipeIngredient | undefined>(undefined);
@@ -192,10 +182,12 @@ const CreateUpdateRecipeForm = ({ recipe, callback, setRecipe }: Omit<IProps, 'o
       createHandler={createRecipeIngredient(recipe.id)}
       callback={onCreateUpdateIngredient}
     >
-      <CreateUpdateRecipeFormCore {...{ recipe, callback, setRecipe, onPressIngredient, onPressCreateIngredient }} />
+      <CreateUpdateRecipeFormCore
+        {...{ recipe, createHandler, updateHandler, callback, setRecipe, onPressIngredient, onPressCreateIngredient }}
+      />
     </CreateUpdateIngredientModal>
   ) : (
-    <CreateUpdateRecipeFormCore {...{ recipe, callback, setRecipe, onPressIngredient }} />
+    <CreateUpdateRecipeFormCore {...{ recipe, createHandler, updateHandler, callback, setRecipe, onPressIngredient }} />
   );
 };
 

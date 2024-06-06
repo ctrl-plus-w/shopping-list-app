@@ -10,6 +10,7 @@ import { useRecipes } from '@/context/recipes-context';
 import supabase from '@/instance/supabase';
 
 import { isDefined } from '@/util/array';
+import { createRecipe, updateRecipe } from '@/util/recipes';
 
 import { TRecipe, TRecipeIngredient } from '@/type/database';
 
@@ -73,7 +74,13 @@ const CreateUpdateRecipeScreen = () => {
         }}
       />
 
-      <CreateUpdateRecipeForm setRecipe={setRecipe} recipe={recipe} callback={createUpdateRecipeCallback} />
+      <CreateUpdateRecipeForm
+        setRecipe={setRecipe}
+        recipe={recipe}
+        callback={createUpdateRecipeCallback}
+        createHandler={createRecipe}
+        updateHandler={updateRecipe}
+      />
     </SafeAreaView>
   );
 };

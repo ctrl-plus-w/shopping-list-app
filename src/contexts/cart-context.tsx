@@ -7,13 +7,13 @@ import supabase from '@/instance/supabase';
 
 import { isDefined } from '@/util/array';
 
-import { TCartIngredient, TRecipe } from '@/type/database';
+import { TCartIngredient, TCartRecipe, TRecipe, TRecipeIngredient } from '@/type/database';
 import { Tables } from '@/type/database-generated';
 
 interface IContext {
   cart?: Tables<'cart'>;
   ingredients: TCartIngredient[];
-  recipes: TRecipe[];
+  recipes: TCartRecipe[];
   refreshCart: () => Promise<void>;
 }
 
@@ -52,7 +52,25 @@ const CartContextProvider = ({ children }: IProps) => {
 
     const { data } = await supabase
       .from('cart')
-      .select('*, cart__ingredients(*, units(*), ingredients(*)), cart__recipes(*, recipes(*, ingredients(*)))')
+      .select(
+        `*,
+        cart__ingredients(
+          *,
+          units(*),
+          ingredients(*)
+        ),
+        cart__recipes(
+          *,
+          recipes(
+            *,
+            recipes__ingredients(
+              *,
+              ingredients(*),
+              units(*)
+            )
+          )
+        )`,
+      )
       .eq('user_id', userId)
       .single();
 
@@ -77,7 +95,19 @@ const CartContextProvider = ({ children }: IProps) => {
       .filter(isDefined);
 
     const recipes = cart__recipes
-      .map(({ recipes }) => (recipes ? { ...recipes, ingredients: [] } : undefined))
+      .map(({ recipes, servings }) => {
+        if (!recipes) return recipes;
+
+        const _ingredients = recipes.recipes__ingredients
+          .map(({ ingredients, units, quantity }) => {
+            if (!ingredients) return ingredients;
+
+            return { ...ingredients, unit: units ?? undefined, quantity: quantity ?? undefined };
+          })
+          .filter(isDefined) satisfies TRecipeIngredient[];
+
+        return { ...recipes, cart_servings: servings ?? undefined, ingredients: _ingredients } satisfies TCartRecipe;
+      })
       .filter(isDefined);
 
     setCart(cart);

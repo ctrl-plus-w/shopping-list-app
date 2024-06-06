@@ -6,6 +6,7 @@ import { Text } from '@rneui/themed';
 import { SafeAreaView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import CreateUpdateIngredientModal from '@/modal/create-update-ingredient-modal';
+import UpdateCartRecipeModal from '@/modal/update-cart-recipe-modal';
 
 import IngredientsList from '@/module/ingredients-list';
 
@@ -14,19 +15,27 @@ import RecipeCard from '@/element/recipe-card';
 import { useCart } from '@/context/cart-context';
 
 import { createCartIngredient, updateCartIngredient } from '@/util/ingredients';
+import { updateCartRecipe } from '@/util/recipes';
 
-import { TCartIngredient } from '@/type/database';
+import { TCartIngredient, TCartRecipe } from '@/type/database';
 
 const HomeScreen = () => {
   const { ingredients, recipes } = useCart();
 
   const [updatingIngredient, setUpdatingIngredient] = useState<TCartIngredient | undefined>(undefined);
+  const [updatingRecipe, setUpdatingRecipe] = useState<TCartRecipe | undefined>(undefined);
 
-  const createUpdateBottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const createUpdateIngredientBottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const updateCartRecipeBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-  const openUpdateIngredientModal = (ingredient: TCartIngredient) => () => {
+  const openCreateUpdateIngredientModal = (ingredient: TCartIngredient) => {
     setUpdatingIngredient(ingredient);
-    createUpdateBottomSheetModalRef.current?.present();
+    createUpdateIngredientBottomSheetModalRef.current?.present();
+  };
+
+  const openUpdateCartRecipeModal = (recipe: TCartRecipe) => {
+    setUpdatingRecipe(recipe);
+    updateCartRecipeBottomSheetModalRef.current?.present();
   };
 
   return (
@@ -34,27 +43,33 @@ const HomeScreen = () => {
       ingredient={updatingIngredient}
       createHandler={createCartIngredient}
       updateHandler={updateCartIngredient}
-      ref={createUpdateBottomSheetModalRef}
+      ref={createUpdateIngredientBottomSheetModalRef}
     >
-      <SafeAreaView style={styles.safeArea}>
-        <Text h2>Recettes</Text>
+      <UpdateCartRecipeModal
+        recipe={updatingRecipe}
+        updateHandler={updateCartRecipe}
+        ref={updateCartRecipeBottomSheetModalRef}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          <Text h2>Recettes</Text>
 
-        <View style={{ display: 'flex', flexDirection: 'column' }}>
-          {recipes.map((recipe) => (
-            <RecipeCard recipe={recipe} onPress={() => null} key={recipe.id} />
-          ))}
-        </View>
+          <View style={{ display: 'flex', flexDirection: 'column' }}>
+            {recipes.map((recipe) => (
+              <RecipeCard recipe={recipe} onPress={() => openUpdateCartRecipeModal(recipe)} key={recipe.id} />
+            ))}
+          </View>
 
-        <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text h2>Ingrédients</Text>
+          <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text h2>Ingrédients</Text>
 
-          <TouchableOpacity onPress={() => createUpdateBottomSheetModalRef?.current?.present()}>
-            <Ionicons name="add" size={32} />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity onPress={() => createUpdateIngredientBottomSheetModalRef?.current?.present()}>
+              <Ionicons name="add" size={32} />
+            </TouchableOpacity>
+          </View>
 
-        <IngredientsList ingredients={ingredients} onPress={openUpdateIngredientModal} />
-      </SafeAreaView>
+          <IngredientsList ingredients={ingredients} onPress={openCreateUpdateIngredientModal} />
+        </SafeAreaView>
+      </UpdateCartRecipeModal>
     </CreateUpdateIngredientModal>
   );
 };
