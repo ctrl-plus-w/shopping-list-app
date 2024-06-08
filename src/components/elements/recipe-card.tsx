@@ -8,16 +8,20 @@ import { useCart } from '@/context/cart-context';
 
 import supabase from '@/instance/supabase';
 
-import { TCartRecipe, TRecipe } from '@/type/database';
+import { TCartRecipe, TRecipeKind } from '@/type/database';
 
-interface IProps {
-  recipe: TCartRecipe | TRecipe;
+interface IProps<T extends TCartRecipe | TRecipeKind> {
+  recipe: T;
   onPress: () => void;
 
   showAddToCartButton?: boolean;
 }
 
-const RecipeCard = ({ recipe, onPress, showAddToCartButton = false }: IProps) => {
+const RecipeCard = <T extends TCartRecipe | TRecipeKind>({
+  recipe,
+  onPress,
+  showAddToCartButton = false,
+}: IProps<T>) => {
   const { cart, recipes, refreshCart } = useCart();
 
   const isInCart = useMemo(() => !!recipes.find((_recipe) => _recipe.id === recipe.id), [recipes, recipe]);

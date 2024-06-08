@@ -7,6 +7,7 @@ import RecipeCard from '@/element/recipe-card';
 
 import { useRecipes } from '@/context/recipes-context';
 
+import { TRecipe } from '@/type/database';
 import { Tables } from '@/type/database-generated';
 
 const RecipesScreen = () => {
@@ -30,7 +31,12 @@ const RecipesScreen = () => {
 
       <View style={{ display: 'flex', flexDirection: 'column' }}>
         {recipes.map((recipe) => (
-          <RecipeCard recipe={recipe} onPress={onPressRecipeCard(recipe)} key={recipe.id} showAddToCartButton />
+          <RecipeCard<TRecipe>
+            recipe={{ ...recipe, ingredients: [] }}
+            onPress={onPressRecipeCard(recipe)}
+            key={recipe.id}
+            showAddToCartButton
+          />
         ))}
       </View>
     </SafeAreaView>
