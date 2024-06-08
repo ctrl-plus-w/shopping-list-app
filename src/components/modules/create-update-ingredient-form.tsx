@@ -4,15 +4,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 
+import RecordAudio from '@/module/record-audio';
+
 import { useAuth } from '@/context/auth-context';
 import { useCart } from '@/context/cart-context';
 import { useUnits } from '@/context/units-context';
 
 import useSuggestedCategories from '@/hook/use-suggested-categories';
 
-import { CreateIngredientHandler, UpdateIngredientHandler } from '@/util/ingredients';
+import { getBase64BlobFromUri } from '@/util/files';
+import { CreateIngredientHandler, getGeneratedIngredientFromBase64, UpdateIngredientHandler } from '@/util/ingredients';
+import { capitalize } from '@/util/strings';
 
 import { TIngredientKind } from '@/type/database';
+import { Tables } from '@/type/database-generated';
 
 export interface IProps<T extends TIngredientKind> {
   ingredient?: T;
@@ -55,14 +60,7 @@ const CreateUpdateIngredientForm = <T extends TIngredientKind>({
       setShowCategoriesSuggestions(false);
     }
 
-    if (ingredient.unit) {
-      if (ingredient.unit.parent_category_id) {
-        setSelectedUnitId(ingredient.unit.parent_category_id);
-        setSelectedSubUnitId(ingredient.unit.id);
-      } else {
-        setSelectedUnitId(ingredient.unit.id);
-      }
-    }
+    if (ingredient.unit) setSelectedUnit(ingredient.unit);
   }, [ingredient]);
 
   const onSubmit = async () => {
@@ -79,6 +77,35 @@ const CreateUpdateIngredientForm = <T extends TIngredientKind>({
       callback && callback(_ingredient);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const generateIngredient = async (uri: string) => {
+    try {
+      const audioBase64 = await getBase64BlobFromUri(uri);
+      if (!audioBase64) return;
+
+      const genIngredient = await getGeneratedIngredientFromBase64(audioBase64);
+
+      setName(capitalize(genIngredient.name));
+      setQuantity(genIngredient.quantity);
+      setCategory(capitalize(genIngredient.categorie));
+
+      const unit = units.find((unit) => unit.singular === genIngredient.unit || unit.plural === genIngredient.unit);
+      if (!unit) return;
+
+      setSelectedUnit(unit);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const setSelectedUnit = (unit: Tables<'units'>) => {
+    if (unit.parent_category_id) {
+      setSelectedUnitId(unit.parent_category_id);
+      setSelectedSubUnitId(unit.id);
+    } else {
+      setSelectedUnitId(unit.id);
     }
   };
 
@@ -217,6 +244,8 @@ const CreateUpdateIngredientForm = <T extends TIngredientKind>({
           <></>
         )}
       </View>
+
+      <RecordAudio onStopRecording={generateIngredient} />
     </View>
   );
 };

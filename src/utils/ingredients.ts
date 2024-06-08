@@ -1,4 +1,5 @@
 import { Session } from '@supabase/auth-js';
+import { z } from 'zod';
 
 import supabase from '@/instance/supabase';
 
@@ -153,4 +154,26 @@ export const updateRecipeIngredient = (recipeId: string): UpdateIngredientHandle
       quantity: data.quantity ?? undefined,
     } satisfies TCartIngredient;
   };
+};
+
+const GeneratedIngredientSchema = z.object({
+  ingredient: z.object({
+    name: z.string(),
+    quantity: z.number().positive(),
+    unit: z.string(),
+    categorie: z.string(),
+  }),
+});
+
+export const getGeneratedIngredientFromBase64 = async (base64: string | ArrayBuffer) => {
+  const res = await fetch('http://127.0.0.1:5000', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 'audio-data': base64 }),
+  });
+
+  const data = await res.json();
+
+  const { ingredient } = await GeneratedIngredientSchema.parseAsync(data);
+  return ingredient;
 };
