@@ -15,8 +15,8 @@ AppState.addEventListener('change', (state) => {
 });
 
 const Auth = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@admin.com');
+  const [password, setPassword] = useState('admin@admin.com');
   const [loading, setLoading] = useState(false);
 
   async function signInWithEmail() {
