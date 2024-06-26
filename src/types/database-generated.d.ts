@@ -23,7 +23,7 @@ export type Database = {
           {
             foreignKeyName: 'cart_user_id_fkey';
             columns: ['user_id'];
-            isOneToOne: true;
+            isOneToOne: false;
             referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
@@ -33,20 +33,20 @@ export type Database = {
         Row: {
           cart_id: string;
           ingredient_id: string;
-          quantity: number | null;
-          unit_id: string;
+          quantity: number;
+          unit_id: string | null;
         };
         Insert: {
           cart_id: string;
           ingredient_id: string;
-          quantity?: number | null;
-          unit_id: string;
+          quantity: number;
+          unit_id?: string | null;
         };
         Update: {
           cart_id?: string;
           ingredient_id?: string;
-          quantity?: number | null;
-          unit_id?: string;
+          quantity?: number;
+          unit_id?: string | null;
         };
         Relationships: [
           {
@@ -97,7 +97,56 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
+            foreignKeyName: 'cart__recipes_ingredient_id_fkey';
+            columns: ['recipe_id'];
+            isOneToOne: false;
+            referencedRelation: 'ingredients';
+            referencedColumns: ['id'];
+          },
+          {
             foreignKeyName: 'cart__recipes_recipe_id_fkey';
+            columns: ['recipe_id'];
+            isOneToOne: false;
+            referencedRelation: 'recipes';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      cart__scheduled_recipes: {
+        Row: {
+          cart_id: string;
+          date: string;
+          id: string;
+          meal: Database['public']['Enums']['meal'];
+          recipe_id: string;
+          servings: number;
+        };
+        Insert: {
+          cart_id: string;
+          date: string;
+          id?: string;
+          meal: Database['public']['Enums']['meal'];
+          recipe_id: string;
+          servings: number;
+        };
+        Update: {
+          cart_id?: string;
+          date?: string;
+          id?: string;
+          meal?: Database['public']['Enums']['meal'];
+          recipe_id?: string;
+          servings?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'public_cart__scheduled_recipes_cart_id_fkey';
+            columns: ['cart_id'];
+            isOneToOne: false;
+            referencedRelation: 'cart';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'public_cart__scheduled_recipes_recipe_id_fkey';
             columns: ['recipe_id'];
             isOneToOne: false;
             referencedRelation: 'recipes';
@@ -347,15 +396,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      get_user_categories: {
-        Args: {
-          uid: string;
-        };
-        Returns: string[];
-      };
+      [_ in never]: never;
     };
     Enums: {
-      [_ in never]: never;
+      meal: 'lunch' | 'dinner';
     };
     CompositeTypes: {
       [_ in never]: never;
