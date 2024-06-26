@@ -161,7 +161,7 @@ const GeneratedIngredientSchema = z.object({
     name: z.string(),
     quantity: z.number().positive(),
     unit: z.string(),
-    categorie: z.string(),
+    category: z.string(),
   }),
 });
 

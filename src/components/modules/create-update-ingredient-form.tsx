@@ -89,7 +89,7 @@ const CreateUpdateIngredientForm = <T extends TIngredientKind>({
 
       setName(capitalize(genIngredient.name));
       setQuantity(genIngredient.quantity);
-      setCategory(capitalize(genIngredient.categorie));
+      setCategory(capitalize(genIngredient.category));
 
       const unit = units.find((unit) => unit.singular === genIngredient.unit || unit.plural === genIngredient.unit);
       if (!unit) return;
